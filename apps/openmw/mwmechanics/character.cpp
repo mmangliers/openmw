@@ -1351,8 +1351,6 @@ bool CharacterController::updateWeaponState()
                         case 2: mAttackType = "target"; break;
                     }
 
-                    std::cout << animgroup << "and" << priorityWeapon.mPriority << std::endl;
-
                     mAnimation->play(animgroup, priorityWeapon,
                                      MWRender::Animation::BlendMask_All, true,
                                      weapSpeed, mAttackType+" start", mAttackType+" stop",
