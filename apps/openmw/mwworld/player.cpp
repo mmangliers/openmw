@@ -35,7 +35,8 @@ namespace MWWorld
         mTeleported(false),
         mCurrentCrimeId(-1),
         mPaidCrimeId(-1),
-        mAttackingOrSpell(false)
+        mAttackingOrSpell(false),
+        mSwiftcasting(false)
     {
         ESM::CellRef cellRef;
         cellRef.blank();
@@ -236,6 +237,16 @@ namespace MWWorld
         mTeleported = teleported;
     }
 
+    void Player::setSwiftcasting(bool swiftcast) 
+    {
+        mSwiftcasting = swiftcast;
+    }
+
+    bool Player::getSwiftcasting() const
+    {
+        return mSwiftcasting;
+    }
+
     void Player::setAttackingOrSpell(bool attackingOrSpell)
     {
         mAttackingOrSpell = attackingOrSpell;
@@ -277,6 +288,7 @@ namespace MWWorld
         mForwardBackward = 0;
         mTeleported = false;
         mAttackingOrSpell = false;
+        mSwiftcasting = false;
         mCurrentCrimeId = -1;
         mPaidCrimeId = -1;
         mLastKnownExteriorPosition = osg::Vec3f(0,0,0);

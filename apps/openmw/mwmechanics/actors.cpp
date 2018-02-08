@@ -1221,7 +1221,10 @@ namespace MWMechanics
                 bool inProcessingRange = distSqr <= sqrAiProcessingDistance;
 
                 if (iter->first == player)
+                {
                     iter->second->getCharacterController()->setAttackingOrSpell(MWBase::Environment::get().getWorld()->getPlayer().getAttackingOrSpell());
+                    iter->second->getCharacterController()->setSwiftcasting(MWBase::Environment::get().getWorld()->getPlayer().getSwiftcasting());
+                }
 
                 // If dead or no longer in combat, no longer store any actors who attempted to hit us. Also remove for the player.
                 if (iter->first != player && (iter->first.getClass().getCreatureStats(iter->first).isDead()

@@ -166,7 +166,7 @@ namespace MWInput
                                 A_ToggleSpell, A_Rest, A_QuickKey1, A_QuickKey2,
                                 A_QuickKey3, A_QuickKey4, A_QuickKey5, A_QuickKey6,
                                 A_QuickKey7, A_QuickKey8, A_QuickKey9, A_QuickKey10,
-                                A_Use, A_Journal};
+                                A_Use, A_Journal, A_Swiftcast};
 
         for(size_t i = 0; i < sizeof(playerChannels)/sizeof(playerChannels[0]); i++) {
             int pc = playerChannels[i];
@@ -235,6 +235,14 @@ namespace MWInput
             {
                 MWMechanics::DrawState_ state = MWBase::Environment::get().getWorld()->getPlayer().getDrawState();
                 mPlayer->setAttackingOrSpell(currentValue != 0 && state != MWMechanics::DrawState_Nothing);
+            }
+            else if (action == A_Swiftcast) 
+            {
+                MWMechanics::DrawState_ state = MWBase::Environment::get().getWorld()->getPlayer().getDrawState();
+                bool triggerAttackOrCast = currentValue != 0 && state != MWMechanics::DrawState_Nothing;
+
+                mPlayer->setSwiftcasting(triggerAttackOrCast);
+                mPlayer->setAttackingOrSpell(triggerAttackOrCast);
             }
             else if (action == A_Jump)
                 mAttemptJump = (currentValue == 1.0 && previousValue == 0.0);
@@ -1182,7 +1190,8 @@ namespace MWInput
         defaultKeyBindings[A_MoveLeft] = SDL_SCANCODE_A;
         defaultKeyBindings[A_MoveRight] = SDL_SCANCODE_D;
         defaultKeyBindings[A_ToggleWeapon] = SDL_SCANCODE_F;
-        defaultKeyBindings[A_ToggleSpell] = SDL_SCANCODE_R;
+        defaultKeyBindings[A_ToggleSpell] = SDL_SCANCODE_M;
+        defaultKeyBindings[A_Swiftcast] = SDL_SCANCODE_R;
         defaultKeyBindings[A_CycleSpellLeft] = SDL_SCANCODE_MINUS;
         defaultKeyBindings[A_CycleSpellRight] = SDL_SCANCODE_EQUALS;
         defaultKeyBindings[A_CycleWeaponLeft] = SDL_SCANCODE_LEFTBRACKET;
@@ -1516,6 +1525,7 @@ namespace MWInput
         ret.push_back(A_QuickKey8);
         ret.push_back(A_QuickKey9);
         ret.push_back(A_QuickKey10);
+        ret.push_back(A_Swiftcast);
 
         return ret;
     }

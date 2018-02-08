@@ -51,6 +51,7 @@ namespace MWWorld
         MWMechanics::AttributeValue mSaveAttributes[ESM::Attribute::Length];
 
         bool mAttackingOrSpell;
+        bool mSwiftcasting;
 
     public:
 
@@ -102,6 +103,9 @@ namespace MWWorld
 
         bool wasTeleported() const;
         void setTeleported(bool teleported);
+
+        void setSwiftcasting(bool switftcast);
+        bool getSwiftcasting() const;
 
         void setAttackingOrSpell(bool attackingOrSpell);
         bool getAttackingOrSpell() const;

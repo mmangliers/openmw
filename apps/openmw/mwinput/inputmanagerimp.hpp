@@ -269,6 +269,7 @@ namespace MWInput
             A_Activate,
 
             A_Use,        //Use weapon, spell, etc.
+            A_Swiftcast,  //Swiftcast a spell
             A_Jump,
             A_AutoMove,   //Toggle Auto-move forward
             A_Rest,       //Rest

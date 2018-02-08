@@ -769,6 +769,7 @@ CharacterController::CharacterController(const MWWorld::Ptr &ptr, MWRender::Anim
     , mSecondsOfRunning(0)
     , mTurnAnimationThreshold(0)
     , mAttackingOrSpell(false)
+    , mSwiftcasting(false)
     , mTimeUntilWake(0.f)
 {
     if(!mAnimation)
@@ -1060,7 +1061,7 @@ bool CharacterController::updateCreatureState()
 
             std::string startKey = "start";
             std::string stopKey = "stop";
-            if (weapType == WeapType_Spell)
+            if (mSwiftcasting || weapType == WeapType_Spell)
             {
                 const std::string spellid = stats.getSpells().getSelectedSpell();
                 if (!spellid.empty() && MWBase::Environment::get().getWorld()->startSpellCast(mPtr))
@@ -1090,7 +1091,7 @@ bool CharacterController::updateCreatureState()
                 else
                     mCurrentWeapon = "";
             }
-            if (weapType != WeapType_Spell || !mAnimation->hasAnimation("spellcast")) // Not all creatures have a dedicated spellcast animation
+            if (!mSwiftcasting && (weapType != WeapType_Spell || !mAnimation->hasAnimation("spellcast"))) // Not all creatures have a dedicated spellcast animation
             {
                 bool isSwimming = MWBase::Environment::get().getWorld()->isSwimming(mPtr);
                 int roll = Misc::Rng::rollDice(3); // [0, 2]
@@ -1292,14 +1293,19 @@ bool CharacterController::updateWeaponState()
         {
             MWBase::Environment::get().getWorld()->breakInvisibility(mPtr);
             mAttackStrength = 0;
-            if(mWeaponType == WeapType_Spell)
+            if(mSwiftcasting || mWeaponType == WeapType_Spell)
             {
+                // Get animation group before we reset swift casting
+                std::string animgroup = mSwiftcasting ? "spellcast" : mCurrentWeapon;
+
                 // Unset casting flag, otherwise pressing the mouse button down would
                 // continue casting every frame if there is no animation
+                mSwiftcasting = false;
                 mAttackingOrSpell = false;
                 if (mPtr == player)
                 {
                     MWBase::Environment::get().getWorld()->getPlayer().setAttackingOrSpell(false);
+                    MWBase::Environment::get().getWorld()->getPlayer().setSwiftcasting(false);
                 }
 
                 const MWWorld::ESMStore &store = MWBase::Environment::get().getWorld()->getStore();
@@ -1345,7 +1351,9 @@ bool CharacterController::updateWeaponState()
                         case 2: mAttackType = "target"; break;
                     }
 
-                    mAnimation->play(mCurrentWeapon, priorityWeapon,
+                    std::cout << animgroup << "and" << priorityWeapon.mPriority << std::endl;
+
+                    mAnimation->play(animgroup, priorityWeapon,
                                      MWRender::Animation::BlendMask_All, true,
                                      weapSpeed, mAttackType+" start", mAttackType+" stop",
                                      0.0f, 0);
@@ -2357,6 +2365,11 @@ void CharacterController::setAttackingOrSpell(bool attackingOrSpell)
 void CharacterController::setAIAttackType(const std::string& attackType)
 {
     mAttackType = attackType;
+}
+
+void CharacterController::setSwiftcasting(bool swiftcasting) 
+{
+    mSwiftcasting = swiftcasting;
 }
 
 void CharacterController::setAttackTypeRandomly(std::string& attackType)
