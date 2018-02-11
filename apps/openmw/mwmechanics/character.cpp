@@ -1046,7 +1046,7 @@ bool CharacterController::updateCreatureState()
     else if (stats.getDrawState() == DrawState_Spell)
         weapType = WeapType_Spell;
 
-    if (weapType != mWeaponType)
+    if (!mSwiftcasting && weapType != mWeaponType)
     {
         mWeaponType = weapType;
         if (mAnimation->isPlaying(mCurrentWeapon))
@@ -1103,7 +1103,7 @@ bool CharacterController::updateCreatureState()
                     mCurrentWeapon = isSwimming && mAnimation->hasAnimation("swimattack3") ? "swimattack3" : "attack3";
             }
 
-            if (!mCurrentWeapon.empty())
+            if (!mSwiftcasting && !mCurrentWeapon.empty())
             {
                 mAnimation->play(mCurrentWeapon, Priority_Weapon,
                                  MWRender::Animation::BlendMask_All, true,
@@ -1119,6 +1119,7 @@ bool CharacterController::updateCreatureState()
         }
 
         mAttackingOrSpell = false;
+        mSwiftcasting = false;
     }
 
     bool animPlaying = mAnimation->getInfo(mCurrentWeapon);
@@ -1155,6 +1156,10 @@ bool CharacterController::updateWeaponState()
         weaptype = WeapType_HandToHand;
     else if (stats.getDrawState() == DrawState_Spell)
         weaptype = WeapType_Spell;
+
+    std::string originalWeapon = mCurrentWeapon;
+    if (mSwiftcasting)
+        mCurrentWeapon = "spellcast";
 
     const bool isWerewolf = cls.isNpc() && cls.getNpcStats(mPtr).isWerewolf();
 
@@ -1277,6 +1282,7 @@ bool CharacterController::updateWeaponState()
 
     float complete;
     bool animPlaying;
+    bool wasSwiftcast = mSwiftcasting;
     if(mAttackingOrSpell)
     {
         MWWorld::Ptr player = getPlayer();
@@ -1288,16 +1294,12 @@ bool CharacterController::updateWeaponState()
         // In other cases we should not break swim and sneak animations
         if (mIdleState != CharState_IdleSneak && mIdleState != CharState_IdleSwim)
             mIdleState = CharState_None;
-
         if(mUpperBodyState == UpperCharState_WeapEquiped && (mHitState == CharState_None || mHitState == CharState_Block))
         {
             MWBase::Environment::get().getWorld()->breakInvisibility(mPtr);
             mAttackStrength = 0;
             if(mSwiftcasting || mWeaponType == WeapType_Spell)
             {
-                // Get animation group before we reset swift casting
-                std::string animgroup = mSwiftcasting ? "spellcast" : mCurrentWeapon;
-
                 // Unset casting flag, otherwise pressing the mouse button down would
                 // continue casting every frame if there is no animation
                 mSwiftcasting = false;
@@ -1350,6 +1352,10 @@ bool CharacterController::updateWeaponState()
                         case 1: mAttackType = "touch"; break;
                         case 2: mAttackType = "target"; break;
                     }
+
+                    // Tidy up some details if this was a swiftcast
+                    std::string animgroup = wasSwiftcast ? "spellcast" : mCurrentWeapon;
+                    weapSpeed = wasSwiftcast ? 1.0f : weapSpeed;
 
                     mAnimation->play(animgroup, priorityWeapon,
                                      MWRender::Animation::BlendMask_All, true,
@@ -1427,13 +1433,14 @@ bool CharacterController::updateWeaponState()
             }
         }
 
-        animPlaying = mAnimation->getInfo(mCurrentWeapon, &complete);
+        animPlaying = mAnimation->getInfo(mCurrentWeapon, &complete) || mAnimation->getInfo("spellcast", &complete);
+
         if(mUpperBodyState == UpperCharState_MinAttackToMaxAttack && !isKnockedDown())
             mAttackStrength = complete;
     }
     else
     {
-        animPlaying = mAnimation->getInfo(mCurrentWeapon, &complete);
+        animPlaying = mAnimation->getInfo(mCurrentWeapon, &complete) || mAnimation->getInfo("spellcast", &complete);
         if(mUpperBodyState == UpperCharState_MinAttackToMaxAttack && !isKnockedDown())
         {
             float attackStrength = complete;
@@ -1523,7 +1530,6 @@ bool CharacterController::updateWeaponState()
             break;
         }
     }
-
     if(!animPlaying)
     {
         if(mUpperBodyState == UpperCharState_EquipingWeap ||
@@ -1620,6 +1626,9 @@ bool CharacterController::updateWeaponState()
             mAnimation->disable("torch");
         }
     }
+
+    if (wasSwiftcast)
+        mCurrentWeapon = originalWeapon;
 
     mAnimation->setAccurateAiming(mUpperBodyState > UpperCharState_WeapEquiped);
 

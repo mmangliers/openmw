@@ -83,3 +83,5 @@ moc_*.cxx
 *.so
 openmw.appdata.xml
 venv/
+/.vs/VSWorkspaceState.json
+/.vs/slnx.sqlite
